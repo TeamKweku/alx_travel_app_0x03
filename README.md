@@ -297,3 +297,143 @@ You can access:
 - Django admin interface at http://localhost:8000/admin
 - API documentation at http://localhost:8000/swagger/
 - Mailpit web interface at http://localhost:8025
+
+## Running the Project with Docker Compose
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+- Git installed on your system
+
+### Setup Steps
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd alx_travel_app_0x03
+```
+
+2. Create a `.env` file in the project root with the following environment variables:
+
+```env
+# Django Settings
+DEBUG=True
+SECRET_KEY=your-secret-key
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database Settings
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=alx_travel_app
+MYSQL_USER=alx_travel_app_user
+MYSQL_PASSWORD=password123
+MYSQL_HOST=db
+MYSQL_PORT=3306
+
+# RabbitMQ Settings
+RABBITMQ_DEFAULT_USER=guest
+RABBITMQ_DEFAULT_PASS=guest
+CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# Email Settings (Using Mailpit for local development)
+EMAIL_HOST=mailpit
+EMAIL_PORT=1025
+EMAIL_USE_TLS=False
+DEFAULT_FROM_EMAIL=test@alxtravelapp.com
+```
+
+3. Build and start the Docker containers:
+
+```bash
+docker compose up --build
+```
+
+4. Once all services are running, in a new terminal, run the database migrations:
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+5. Create a superuser account:
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Follow the prompts to create your admin account.
+
+### Accessing the Services
+
+After completing the setup, you can access the following services:
+
+- **Django Application**: http://localhost:8000
+- **Django Admin Interface**: http://localhost:8000/admin
+- **API Documentation**: http://localhost:8000/api/docs/
+- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
+- **Mailpit Web Interface**: http://localhost:8025 (for viewing sent emails)
+
+### Testing Email Functionality
+
+The project uses Mailpit for local email testing. All emails sent by the application in development will be caught by Mailpit and can be viewed in its web interface at http://localhost:8025. No emails will actually be sent to real email addresses.
+
+### Common Commands
+
+- Stop all services:
+
+```bash
+docker compose down
+```
+
+- View logs of all services:
+
+```bash
+docker compose logs
+```
+
+- View logs of a specific service:
+
+```bash
+docker compose logs [service_name]  # e.g., docker compose logs web
+```
+
+- Restart a specific service:
+
+```bash
+docker compose restart [service_name]  # e.g., docker compose restart web
+```
+
+- Run Django management commands:
+
+```bash
+docker compose exec web python manage.py [command]
+```
+
+### Troubleshooting
+
+1. **Database Connection Issues**:
+
+   - Ensure the MySQL container is running: `docker compose ps`
+   - Check MySQL logs: `docker compose logs db`
+   - Verify database credentials in `.env` file
+
+2. **Email Testing Issues**:
+
+   - Ensure Mailpit container is running
+   - Check Mailpit logs: `docker compose logs mailpit`
+   - Verify email settings in Django settings
+
+3. **Container Start-up Issues**:
+   - Remove all containers and volumes: `docker compose down -v`
+   - Rebuild all containers: `docker compose up --build`
+
+### Development Workflow
+
+1. Make changes to your code
+2. The Django development server will automatically reload
+3. If you modify dependencies:
+   - Update `requirements.txt`
+   - Rebuild containers: `docker compose up --build`
+4. If you modify models:
+   - Create migrations: `docker compose exec web python manage.py makemigrations`
+   - Apply migrations: `docker compose exec web python manage.py migrate`
